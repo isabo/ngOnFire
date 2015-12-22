@@ -105,11 +105,7 @@ function createModelService($rootScope, $q) {
                     // 2. A constructor for a subordinate model. If so the name will end in Ctor_.
                     // 3. A method added to the prototype by the consumer.
 
-                    if (name in realCtor.schema) {
-                        // TODO: Requires a change in onfire -- currently the schema is not available.
-                        // Alternatively, onfire could tag the getterSetter function with a special
-                        // property that we can detect here.
-
+                    if (name in realCtor.getSchema()) {
                         // It's a getter/setter. We need to create a getter and a setter on the
                         // proxy class we're generating.
                         defineProxyProperty(proxyCtor, name);
