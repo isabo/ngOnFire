@@ -186,6 +186,7 @@ function createModelService($rootScope, $q) {
      * instance that will be returned instead of the onfire.model.Model instance.
      *
      * @param {!ProxyModel} proxyModel A ProxyModel instance.
+     * @param {string} methodName The name of the "real" method.
      * @param {...*} var_args The appropriate arguments, if any, for the original method.
      * @return {*}
      */
