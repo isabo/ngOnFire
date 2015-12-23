@@ -5,7 +5,7 @@ angular.module('ngOnFire').
 
 
 /**
- * @param {!angular.$rootScope} $rootScope The Angular $rootScope.
+ * @param {!angular.Scope} $rootScope The Angular $rootScope.
  * @param {!angular.$q} $q The Angular promise service.
  * @ngInject
  */
@@ -22,7 +22,8 @@ function createModelService($rootScope, $q) {
      * not prevent the compiler from shortening the function name: all it does is tell the compiler
      * to add the human-readable name as an alias to the short-name.
      *
-     * @param {function(new:onfire.model.Model)} ctor The constructor of the relevant onfire model.
+     * @param {function(new:onfire.model.Model, !onfire.Ref)} ctor The constructor of the relevant
+     *      onfire model.
      * @param {!onfire.Ref} ref A reference to the location of the data in Firebase.
      * @constructor
      */
@@ -60,8 +61,8 @@ function createModelService($rootScope, $q) {
      * Takes a "real" model constructor and returns an equivalent constructor that is Angular-
      * friendly.
      *
-     * @param {function(new:onfire.model.Model)} modelCtor A model constructor.
-     * @return {function(new:ProxyModel)}
+     * @param {function(new:onfire.model.Model, !onfire.Ref)} modelCtor A model constructor.
+     * @return {function(new:ProxyModel, !onfire.Ref)}
      */
     function generateProxyModel(modelCtor) {
 
@@ -86,12 +87,14 @@ function createModelService($rootScope, $q) {
      * Add proxy methods and properties onto our proxy model prototype so that it has the
      * functionality of the original.
      *
-     * @param {function(new:onfire.model.Model)} realCtor The original model constructor for which
-     *      the proxy is being created.
-     * @param {function(new:ProxyModel)} proxyCtor The proxy constructor we are building.
+     * @param {function(new:onfire.model.Model, !onfire.Ref)} realCtor The original model
+     *      constructor for which the proxy is being created.
+     * @param {function(new:ProxyModel, !onfire.Ref)} proxyCtor The proxy constructor we are
+     *      building.
      */
     function generateProperties(proxyCtor, realCtor) {
 
+        var schema = realCtor.getSchema();
         for (var name in realCtor.prototype) {
 
             if (realCtor.prototype.hasOwnProperty(name)) {
@@ -105,7 +108,7 @@ function createModelService($rootScope, $q) {
                     // 2. A constructor for a subordinate model. If so the name will end in Ctor_.
                     // 3. A method added to the prototype by the consumer.
 
-                    if (name in realCtor.getSchema()) {
+                    if (name in schema) {
                         // It's a getter/setter. We need to create a getter and a setter on the
                         // proxy class we're generating.
                         defineProxyProperty(proxyCtor, name);
@@ -119,7 +122,7 @@ function createModelService($rootScope, $q) {
 
                         // It's a method added to the prototype by the consumer.
                         // Add an Angular-friendly proxy for the method.
-                        proxyCtor.prototype['$' + name] = generateProxyMethod(proxyCtor, name);
+                        proxyCtor.prototype['$' + name] = generateProxyMethod(name);
                     }
                 } else {
                     // This property/value pair was added by the consumer.
@@ -134,7 +137,8 @@ function createModelService($rootScope, $q) {
      * Defines a getter and setter for a named property on the prototype of the supplied proxy.
      * These methods pass through to the "real" model instance.
      *
-     * @param {function(new:ProxyModel)} proxyCtor The constructor of a proxy model we are building.
+     * @param {function(new:ProxyModel, !onfire.Ref)} proxyCtor The constructor of a proxy model we
+     *      are building.
      * @param {string} propName The name of the model property we are proxying.
      */
     function defineProxyProperty(proxyCtor, propName) {
@@ -165,11 +169,13 @@ function createModelService($rootScope, $q) {
         /**
          * @this {ProxyModel}
          */
-        return function() {
-            var args = Array.prototype.slice.apply(arguments, 0);
-            args.shift(methodName);
+        function method() {
+            var args = Array.prototype.slice.apply(arguments);
+            args.unshift(methodName);
             return callRealMethod.apply(this, args)
         }
+
+        return method;
     }
 
 
@@ -180,13 +186,13 @@ function createModelService($rootScope, $q) {
      * instance that will be returned instead of the onfire.model.Model instance.
      *
      * @param {!ProxyModel} proxyModel A ProxyModel instance.
-     * @param {...*=} var_args The appropriate arguments, if any, for the original method.
+     * @param {...*} var_args The appropriate arguments, if any, for the original method.
      * @return {*}
      */
     function callRealMethod(proxyModel, methodName, var_args) {
 
         // Call the "real" method.
-        var args = Array.prototype.slice.apply(arguments, 2);
+        var args = Array.prototype.slice.call(arguments, 2);
         var realModel = proxyModel['$$model_'];
         var v = realModel[methodName].apply(realModel, args);
 
@@ -208,11 +214,12 @@ function createModelService($rootScope, $q) {
 
     /**
      * @param {function(new:onfire.model.Model)} ctor
-     * @return {function(new:ProxyModel)}
+     * @return {function(new:ProxyModel, !onfire.Ref)}
      */
-    return function(ctor) {
+    function service(ctor) {
         return generateProxyModel(ctor);
-    };
+    }
+    return service;
 }
 
 })();
