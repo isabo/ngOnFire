@@ -4,7 +4,8 @@
   "description": "OnFire bindings for AngularJS",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "node build/build.js"
   },
   "repository": {
     "type": "git",
@@ -25,8 +26,13 @@
     "url": "https://github.com/isabo/ngOnFire/issues"
   },
   "homepage": "https://github.com/isabo/ngOnFire#readme",
+  "peerDependencies": {
+    "firebase": "^2.3.2"
+  },
   "devDependencies": {
-    "closure-compiler": "git://github.com/isabo/node-closure.git#allow-newer-compiler",
-    "google-closure-compiler": "^20151216.0.0"
+    "firebase-externs": "0.0.0",
+    "google-closure-compiler": "^20151216.0.0",
+    "google-closure-library": "^20151216.0.0",
+    "onfire": "isabo/onfire#expose-schema"
   }
 }
