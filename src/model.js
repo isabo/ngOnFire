@@ -94,7 +94,16 @@ function createModelService($rootScope, $q) {
      */
     function generateProperties(proxyCtor, realCtor) {
 
-        var schema = realCtor.getSchema();
+        /**
+         * @return {!Object}
+         * @suppress {checkTypes} because getSchema is a static method added to the inherited model
+         *      constructor, and therefore not defined in the OnFire externs.
+         */
+        function getSchema() {
+            return /** @type {!Object} */(realCtor.getSchema());
+        }
+        var schema = getSchema();
+
         for (var name in realCtor.prototype) {
 
             if (realCtor.prototype.hasOwnProperty(name)) {
