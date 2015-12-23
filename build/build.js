@@ -3,7 +3,8 @@ var ClosureCompiler = require('google-closure-compiler').compiler;
 
 var closureCompiler = new ClosureCompiler({
     js: [
-        'src/**.js',
+        'src/module.js',
+        'src/model.js',
         'node_modules/google-closure-library/closure/goog/base.js',
         'node_modules/google-closure-library/closure/goog/promise/**.js'
     ],
