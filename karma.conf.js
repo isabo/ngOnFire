@@ -19,9 +19,8 @@ module.exports = function(config) {
       'node_modules/angular-mocks/angular-mocks.js',
       'node_modules/firebase/lib/firebase-web.js',
       'node_modules/onfire/dist/onfire.min.js',
-      'src/module.js',
-      'src/model.js',
-      'test/**/*_test.js'
+      'dist/ng-onfire.min.js',
+      'test/**/*test.js'
     ],
 
 
