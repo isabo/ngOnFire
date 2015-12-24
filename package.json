@@ -30,9 +30,15 @@
     "firebase": "^2.3.2"
   },
   "devDependencies": {
+    "angular": "^1.4.8",
+    "angular-mocks": "^1.4.8",
     "firebase-externs": "0.0.0",
     "google-closure-compiler": "^20151216.0.0",
     "google-closure-library": "^20151216.0.0",
+    "jasmine-core": "^2.4.1",
+    "karma": "^0.13.15",
+    "karma-chrome-launcher": "^0.2.2",
+    "karma-jasmine": "^0.3.6",
     "onfire": "isabo/onfire#expose-schema"
   }
 }
