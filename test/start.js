@@ -17,7 +17,11 @@ if (process.argv.length > 2 && process.argv[2] === '--single-run') {
 }
 var karmaServer = new KarmaServer(options, function(exitCode) {
     console.log('Karma has exited with code ' + exitCode);
-    shutdown(exitCode);
+
+    // Allow Karma to completely finish, then do our own shutdown.
+    setTimeout(function() {
+        shutdown(exitCode);
+    }, 0);
 });
 karmaServer.start();
 
@@ -60,6 +64,6 @@ function shutdown(exitCode) {
             process.exit(exitCode || 0);
         });
     } else {
-        process.exit();
+        process.exit(exitCode || 0);
     }
 }
