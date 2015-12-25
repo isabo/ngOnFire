@@ -1,0 +1,9 @@
+{
+    "people": {
+        "p1": {
+            "name": "John Smith",
+            "age": 34,
+            "likesBeer": true
+        }
+    }
+}

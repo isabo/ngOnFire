@@ -4,7 +4,7 @@
   "description": "OnFire bindings for AngularJS",
   "main": "index.js",
   "scripts": {
-    "test": "node_modules/.bin/karma start --single-run",
+    "test": "node test/start.js --single-run",
     "build": "node build/build.js"
   },
   "repository": {
@@ -33,6 +33,7 @@
     "angular": "^1.4.8",
     "angular-mocks": "^1.4.8",
     "firebase-externs": "0.0.0",
+    "firebase-server": "^0.5.1",
     "google-closure-compiler": "^20151216.0.0",
     "google-closure-library": "^20151216.0.0",
     "jasmine-core": "^2.4.1",

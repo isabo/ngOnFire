@@ -15,12 +15,30 @@ module.exports = function(config) {
 
     // list of files / patterns to load in the browser
     files: [
+
+      // Angular
       'node_modules/angular/angular.min.js',
       'node_modules/angular-mocks/angular-mocks.js',
+
+      // Firebase
       'node_modules/firebase/lib/firebase-web.js',
+
+      // OnFire
       'node_modules/onfire/dist/onfire.min.js',
+
+      // ngOnFire
       'dist/ng-onfire.min.js',
-      'test/**/*test.js'
+
+      // Test specs
+      'test/**/*test.js',
+
+      // Test data
+      {
+        pattern:  'test/**/*.json',
+        watched:  true,
+        served:   true,
+        included: false
+      }
     ],
 
 
