@@ -180,8 +180,8 @@ function createModelService($rootScope, $q) {
          */
         function method() {
             var args = Array.prototype.slice.apply(arguments);
-            args.unshift(methodName);
-            return callRealMethod.apply(this, args)
+            args.unshift(this, methodName);
+            return callRealMethod.apply(null, args)
         }
 
         return method;
