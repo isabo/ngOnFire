@@ -27,7 +27,8 @@
   },
   "homepage": "https://github.com/isabo/ngOnFire#readme",
   "peerDependencies": {
-    "firebase": "^2.3.2"
+    "firebase": "^2.3.2",
+    "onfire": "^0.1.6"
   },
   "devDependencies": {
     "angular": "^1.4.8",
@@ -40,6 +41,5 @@
     "karma": "^0.13.15",
     "karma-chrome-launcher": "^0.2.2",
     "karma-jasmine": "^0.3.6",
-    "onfire": "isabo/onfire#expose-schema"
   }
 }

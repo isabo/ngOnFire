@@ -4,6 +4,11 @@
             "name": "John Smith",
             "age": 34,
             "likesBeer": true
+        },
+        "p2": {
+            "name": "Fred Bloggs",
+            "age": 26,
+            "likesBeer": false
         }
     }
 }

@@ -22,8 +22,8 @@ function createModelService($rootScope, $q) {
      * not prevent the compiler from shortening the function name: all it does is tell the compiler
      * to add the human-readable name as an alias to the short-name.
      *
-     * @param {function(new:onfire.model.Model, !onfire.Ref)|onfire.model.Model} ctorOrInstance The
-     *      constructor of the relevant onfire model, or a model instance that we need to represent.
+     * @param {ModelCtor|onfire.model.Model} ctorOrInstance The constructor of the relevant onfire
+     *      model, or a model instance that we need to represent.
      * @param {!onfire.Ref=} ref A reference to the location of the data in Firebase.
      * @constructor
      */
@@ -34,7 +34,7 @@ function createModelService($rootScope, $q) {
         if (ctorOrInstance instanceof onfire.model.Model) {
             realModel = ctorOrInstance;
         } else {
-            var ctor = /** @type function(new:onfire.model.Model, !onfire.Ref) */(ctorOrInstance);
+            var ctor = /** @type ModelCtor */(ctorOrInstance);
             realModel = new ctor(/** @type {!onfire.Ref}*/(ref));
         }
 
@@ -71,21 +71,24 @@ function createModelService($rootScope, $q) {
      * Base class for Angular-friendly collections. It instantiates a "real" model and proxies the
      * standard methods through to it.
      *
+     * @param {CollectionCtor|!onfire.model.Collection} ctorOrInstance The constructor of the
+     *      relevant onfire model, or an instance.
      * @param {
-            function(new:onfire.model.Collection, !onfire.Ref)|!onfire.model.Collection
-        } ctorOrInstance The constructor of the relevant onfire model, or an instance.
+        function(new:ProxyModel, !onfire.Ref)
+        |
+        function(new:ProxyCollection, !onfire.Ref)
+    } memberProxyCtor The constructor to use when creating proxies for the collection members.
      * @param {!onfire.Ref=} ref A reference to the location of the data in Firebase.
      * @constructor
      */
-    function ProxyCollection(ctorOrInstance, ref) {
+    function ProxyCollection(ctorOrInstance, memberProxyCtor, ref) {
 
         // For Google Closure Compiler's benefit, this is broken down into multiple steps.
         var realModel;
         if (ctorOrInstance instanceof onfire.model.Collection) {
             realModel = ctorOrInstance;
         } else {
-            var ctor =
-                /** @type function(new:onfire.model.Collection, !onfire.Ref) */(ctorOrInstance);
+            var ctor = /** @type CollectionCtor */(ctorOrInstance);
             realModel = new ctor(/** @type {!onfire.Ref}*/(ref));
         }
 
@@ -94,6 +97,15 @@ function createModelService($rootScope, $q) {
          * @private
          */
         this['$$model_'] = realModel;
+
+        /**
+         * The constructor to use when creating proxies for the collection members.
+         *
+         * @type {ProxyModel|ProxyCollection}
+         * @private
+         */
+        this['$$memberProxyCtor_'] = memberProxyCtor;
+
 
         // Listen for changes on the original model, and make sure that Angular notices.
         realModel.onChildAdded(handleChildAdded_.bind(this));
@@ -116,14 +128,14 @@ function createModelService($rootScope, $q) {
         var self = this;
         var p = realModel.whenLoaded().
             then(function(/** !onfire.model.Collection */model) {
-                return model.forEach(function(member) {
+                return model.forEach(function(/** !onfire.model.Model|Firebase.Value */member, /** string */key) {
                     if (member instanceof onfire.model.Model) {
                         // The member model is fully loaded at this point.
                         // Represent it using a ProxyModel instance.
-                        self[member.key()] = newProxyModel_(model);
+                        self[key] = newProxyModel_(self['$$memberProxyCtor_'], member);
                     } else {
                         // It's a simple value.
-                        self[member.key()] = member;
+                        self[key] = member;
                     }
                 });
             }).
@@ -192,7 +204,7 @@ function createModelService($rootScope, $q) {
 
         var self = this;
         return thisModel.create(opt_values).
-            then(function(model) {
+            then(function(/** !onfire.model.Model */model) {
                 // By this point, we should have already handled the child_added event.
                 // But only if opt_values was supplied.
                 // If we have a value for this key, use it, otherwise use the provided value.
@@ -201,7 +213,7 @@ function createModelService($rootScope, $q) {
                     model.dispose();
                     return get_.call(self, key);
                 } else {
-                    return newProxyModel_(model)['$whenLoaded']();
+                    return newProxyModel_(self['$$memberProxyCtor_'], model)['$whenLoaded']();
                     // Note: handleChildAdded_ will create a distinct instance from this one. This
                     // one will have to be disposed after use, whereas the one from handleChildAdded_
                     // will not.
@@ -218,7 +230,7 @@ function createModelService($rootScope, $q) {
      * type of members in the collection. It does not need to return anything, but if it returns a
      * promise, the main return value of this method (a promise) will depend on it.
      */
-    ProxyCollection.prototype.forEach = forEach_;
+    ProxyCollection.prototype['$forEach'] = forEach_;
 
     /**
      * @param {
@@ -276,8 +288,9 @@ function createModelService($rootScope, $q) {
 
         var self = this;
         return thisModel.fetch(key).
-            then(function(model) {
-                self[key] = (model instanceof onfire.model.Model) ? newProxyModel_(model) : model;
+            then(function(/** !onfire.model.Model|Firebase.Value */model) {
+                self[key] = (model instanceof onfire.model.Model) ?
+                    newProxyModel_(self['$$memberProxyCtor_'], model) : model;
                 scheduleDigest_.call(self);
             });
     }
@@ -319,15 +332,18 @@ function createModelService($rootScope, $q) {
     /**
      * Create a new proxy instance appropriate for the model that is being proxied.
      *
-     * @param {onfire.model.Model} realModel
+     * @param {
+        (
+            function(new:ProxyModel, !onfire.model.Model)
+            |
+            function(new:ProxyCollection, !onfire.model.Collection)
+        )} proxyCtor
+     * @param {!onfire.model.Model} realModel
      * @return {!ProxyModel|!ProxyCollection}
      */
-    function newProxyModel_(realModel) {
+    function newProxyModel_(proxyCtor, realModel) {
 
-        if (realModel instanceof onfire.model.Collection) {
-            return new ProxyCollection(realModel);
-        }
-        return new ProxyModel(realModel);
+        return new proxyCtor(realModel);
     }
 
 
@@ -359,7 +375,7 @@ function createModelService($rootScope, $q) {
 
     // Proxy the public methods from the "real" model constructor's prototype.
     propertyNames = ['key', 'exists', 'hasChanges', 'save', 'set', 'remove', 'count',
-            'containsKey', 'keys'];
+            'containsKey', 'keys', 'count'];
     for (var i in propertyNames) {
         var name = propertyNames[i];
         ProxyCollection.prototype['$' + name] = generateProxyMethod(name);
@@ -371,24 +387,21 @@ function createModelService($rootScope, $q) {
      * Takes a "real" model constructor and returns an equivalent constructor that is Angular-
      * friendly.
      *
-     * @param {
-            function(new:onfire.model.Model, !onfire.Ref)
-            |
-            function(new:onfire.model.Collection, !onfire.Ref)
-        } modelCtor A model constructor.
+     * @param {ModelCtor|CollectionCtor} modelCtor A model constructor.
      * @return {
             function(new:ProxyModel, !onfire.Ref)
             |
             function(new:ProxyCollection, !onfire.Ref)
         }
      */
-    function generateProxyModel(modelCtor) {
+    function generateProxyModelCtor(modelCtor) {
 
         var proxyCtor = (modelCtor.prototype instanceof onfire.model.Collection) ?
-                generateProxyCollectionCtor(modelCtor) : generateProxyModelCtor(modelCtor);
+                generateSpecificProxyCollectionCtor(modelCtor) :
+                generateSpecificProxyModelCtor(modelCtor);
 
         // Add proxies to access the data, and to call methods defined on the real model.
-        generateProperties(proxyCtor, modelCtor);
+        generatePrototypeProperties(proxyCtor, modelCtor);
 
         return proxyCtor;
     }
@@ -397,18 +410,23 @@ function createModelService($rootScope, $q) {
     /**
      * Derives a specific proxy model class from the base ProxyModel class.
      *
-     * @param {function(new:onfire.model.Model, !onfire.Ref)} modelCtor
+     * @param {ModelCtor} modelCtor
      * @return {function(new:ProxyModel, !onfire.Ref)}
      */
-    function generateProxyModelCtor(modelCtor) {
+    function generateSpecificProxyModelCtor(modelCtor) {
 
         /**
-         * @param {!onfire.Ref} ref
+         * @param {!onfire.Ref|!onfire.model.Model} refOrModel
          * @constructor
          * @extends {ProxyModel}
          */
-        var SpecificProxyModel = function(ref){
-            SpecificProxyModel.base(this, 'constructor', modelCtor, ref);
+        var SpecificProxyModel = function(refOrModel){
+            if (refOrModel instanceof onfire.Ref) {
+                SpecificProxyModel.base(this, 'constructor', modelCtor, refOrModel);
+            } else {
+                // Assume real model instance.
+                SpecificProxyModel.base(this, 'constructor', refOrModel);
+            }
         };
         goog.inherits(SpecificProxyModel, ProxyModel);
 
@@ -419,18 +437,34 @@ function createModelService($rootScope, $q) {
     /**
      * Derives a specific proxy collection class from the base ProxyCollection class.
      *
-     * @param {function(new:onfire.model.Collection, !onfire.Ref)} modelCtor
+     * @param {CollectionCtor} modelCtor
      * @return {function(new:ProxyCollection, !onfire.Ref)}
      */
-    function generateProxyCollectionCtor(modelCtor) {
+    function generateSpecificProxyCollectionCtor(modelCtor) {
 
         /**
-         * @param {!onfire.Ref} ref
+         * @return {ModelCtor|CollectionCtor}
+         * @suppress {checkTypes} because getMemberCtor is a static method added to the inherited
+         *      model constructor, and therefore not defined in the OnFire externs.
+         */
+        function getMemberCtor() {
+            return /** @type {ModelCtor} */(modelCtor.getMemberCtor());
+        }
+        var memberProxyCtor = generateProxyModelCtor(getMemberCtor());
+
+        /**
+         * @param {!onfire.Ref|!onfire.model.Collection} refOrCollection
          * @constructor
          * @extends {ProxyCollection}
          */
-        var SpecificProxyCollection = function(ref){
-            SpecificProxyCollection.base(this, 'constructor', modelCtor, ref);
+        var SpecificProxyCollection = function(refOrCollection){
+            if (refOrCollection instanceof onfire.Ref) {
+                SpecificProxyCollection.base(this, 'constructor', modelCtor, memberProxyCtor,
+                    refOrCollection);
+            } else {
+                // Assume real collection instance.
+                SpecificProxyCollection.base(this, 'constructor', refOrCollection, memberProxyCtor);
+            }
         };
         goog.inherits(SpecificProxyCollection, ProxyCollection);
 
@@ -442,12 +476,12 @@ function createModelService($rootScope, $q) {
      * Add proxy methods and properties onto our proxy model prototype so that it has the
      * functionality of the original.
      *
-     * @param {function(new:onfire.model.Model, !onfire.Ref)} realCtor The original model
+     * @param {ModelCtor} realCtor The original model
      *      constructor for which the proxy is being created.
      * @param {function(new:ProxyModel, !onfire.Ref)} proxyCtor The proxy constructor we are
      *      building.
      */
-    function generateProperties(proxyCtor, realCtor) {
+    function generatePrototypeProperties(proxyCtor, realCtor) {
 
         /**
          * @return {!Object}
@@ -586,9 +620,23 @@ function createModelService($rootScope, $q) {
      * @return {function(new:ProxyModel, !onfire.Ref)}
      */
     function service(ctor) {
-        return generateProxyModel(ctor);
+        return generateProxyModelCtor(ctor);
     }
     return service;
 }
 
 })();
+
+/**
+ * Allows us to use ModelCtor as shorthand.
+ *
+ * @typedef {function(new:onfire.model.Model, !onfire.Ref)}
+ */
+var ModelCtor;
+
+/**
+ * Allows us to use CollectionCtor as shorthand.
+ *
+ * @typedef {function(new:onfire.model.Collection, !onfire.Ref)}
+ */
+var CollectionCtor;

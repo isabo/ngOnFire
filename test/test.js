@@ -1,3 +1,5 @@
+'use strict';
+
 angular.module('test', ['ngOnFire']);
 
 // Load initial test data.
@@ -39,12 +41,17 @@ function stopPumping(handle) {
 }
 
 
-// Define our test model in the usual, non-Angular way.
+// Define our test models in the usual, non-Angular way.
 var Person = onfire.defineModel(
     {
         name: 'string',
         age: 'number',
         likesBeer: 'boolean'
+    });
+
+var People = onfire.defineModel(
+    {
+        $id: Person
     });
 
 
@@ -61,7 +68,7 @@ describe('$Model service', function() {
 
 
 
-describe('$Model service generates a constructor whose prototype', function() {
+describe('$Model service generates a model constructor whose prototype', function() {
 
     var $Person;
 
@@ -105,6 +112,55 @@ describe('$Model service generates a constructor whose prototype', function() {
     });
 });
 
+
+describe('$Model service generates a collection constructor whose prototype', function() {
+
+    var $People;
+
+    // Set the context for inject calls.
+    beforeEach(angular.mock.module('test'));
+
+    beforeEach(inject(function($Model) {
+        $People = $Model(People);
+    }));
+
+
+    it('has no enumerable data properties', function() {
+
+        var expectedProps = [
+            'constructor'
+        ].sort();
+
+        var actualProps = Object.keys($People.prototype).sort();
+
+        expect(actualProps).toEqual(expectedProps);
+    });
+
+
+    it('has the expected standard methods', function() {
+
+        var inheritedMethods = [
+            '$dispose',
+            '$whenLoaded',
+            '$key',
+            '$exists',
+            '$hasChanges',
+            '$save',
+            '$containsKey',
+            '$count',
+            '$create',
+            // '$fetchOrCreate',
+            '$forEach',
+            '$get',
+            '$remove',
+            '$set'
+        ];
+
+        for (var i = 0; i < inheritedMethods.length; i++) {
+            expect(inheritedMethods[i] in $People.prototype).toBe(true);
+        }
+    });
+});
 
 
 describe('Model instance', function() {
@@ -191,7 +247,7 @@ describe('Model instance', function() {
             });
 
 
-        $rootScope.$watch(function(scope) {
+        var stopWatching = $rootScope.$watch(function(scope) {
             try {
                 return person.age;
             } catch (e) {
@@ -203,6 +259,7 @@ describe('Model instance', function() {
 
                     person.$dispose();
 
+                    stopWatching();
                     stopPumping(h);
                     done();
                 }
@@ -216,4 +273,71 @@ describe('Model instance', function() {
 });
 
 
-// TODO: When a property is a nested model
+describe('Collection instance', function() {
+
+    var client = new Firebase('ws://127.0.1:5000');
+    var rootRef = new onfire.Ref(client);
+    var peopleRef = rootRef.child('people');
+
+    var $rootScope;
+    var $People;
+    var $Person;
+
+    // Set the context for inject calls.
+    beforeEach(angular.mock.module('test'));
+
+    beforeEach(inject(function(_$rootScope_, $Model) {
+        $rootScope = _$rootScope_;
+        $People = $Model(People);
+        $Person = $Model(Person);
+    }));
+
+
+    it('loads the data correctly', function(done) {
+
+        var people = new $People(peopleRef);
+
+        people.$whenLoaded().
+            then(function() {
+
+                expect(people.$exists()).toBe(true);
+                expect(people.$keys()).toEqual(Object.keys(data.people));
+                expect(people.$hasChanges()).toBe(false);
+
+                var expectedCount = 0;
+                var personKey;
+                for (var prop in data.people) {
+                    expectedCount++;
+                    expect(people.$containsKey(prop)).toBe(true);
+                    personKey = prop; // Will end up as last person's key.
+                }
+                expect(people.$count()).toBe(expectedCount);
+
+                // Did it load the individual people?
+                var person = people.$get(personKey);
+                expect(person.$key()).toBe(personKey);
+                expect(person.$exists()).toBe(true);
+                expect(person.$hasChanges()).toBe(false);
+
+                for (let prop in data.people[personKey]) {
+                    expect(person[prop]).toBe(data.people[personKey][prop]);
+                }
+
+                expect(people.$dispose.bind(people)).not.toThrow();
+
+                stopPumping(h);
+                done();
+
+            }, function(err) {
+                expect(err).toBeNull();
+                stopPumping(h);
+                done.fail('Collection failed to load: ' + err.stack);
+            });
+
+        // Nudge things along:
+        var h = startPumping($rootScope);
+    });
+
+});
+
+// TODO: Append / remove to/from collection.
