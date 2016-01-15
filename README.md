@@ -11,6 +11,13 @@ More convenient (for me) than AngularFire, because
 
 ## How to Use
 
+### Include these in your app
+```html
+<script type="javascript" src="firebase-web.js"></script>
+<script type="javascript" src="onfire.min.js"></script>
+<script type="javascript" src="ng-onfire.min.js"></script>
+```
+
 ### Define your models in the normal way
 This is core data manipulation code. It is oblivious of Angular and is usable client-side or
 server-side and will survive even if the project is rewritten to use a different framework from
@@ -74,7 +81,7 @@ to a method that is expecting a `Person` instance.
 
 #### Template:
 ```html
-<div ng-repeat="person in ctrl.people">
+<div ng-repeat="person in ctrl.people track by person.$key()">
     <button ng-click="ctrl.currentUser.makeFriend(person)">
         Add {{person.firstName}} to friends list
     </button>
