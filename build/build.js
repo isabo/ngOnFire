@@ -19,6 +19,9 @@ var closureCompiler = new ClosureCompiler({
     angular_pass: true,
     manage_closure_dependencies: true,
     js_output_file: 'dist/ng-onfire.min.js',
+    output_wrapper_file: 'build/wrapper.js',
+    language_in: 'ECMASCRIPT5_STRICT',
+    language_out: 'ECMASCRIPT5_STRICT',
     compilation_level: 'ADVANCED',
     warning_level: 'VERBOSE',
     summary_detail_level: '3'
