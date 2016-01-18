@@ -1,3 +1,4 @@
+var fs = require('fs-extra');
 var ClosureCompiler = require('google-closure-compiler').compiler;
 
 
@@ -32,6 +33,16 @@ var compilerProcess = closureCompiler.run(function(exitCode, stdOut, stdErr) {
 
     console.log(stdErr);
 
-    // Fail if the compiler failed - this will indicate success/failure to CI tools.
-    process.exit(exitCode);
+    console.log('Copying externs to dist/ ...');
+    fs.copy('src/externs/outgoing/', 'dist/', function(err) {
+        if (!err) {
+            console.log('Done.\n');
+            // Fail if the compiler failed - this will indicate success/failure to CI tools.
+            process.exit(exitCode);
+        } else {
+            console.error(err);
+            process.exit(1);
+        }
+    });
+
 });
