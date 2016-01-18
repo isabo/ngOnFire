@@ -374,8 +374,8 @@ function createModelService($rootScope, $q) {
     // TODO: fetchOrCreate needed?
 
     // Proxy the public methods from the "real" model constructor's prototype.
-    propertyNames = ['key', 'exists', 'hasChanges', 'save', 'set', 'remove', 'count',
-            'containsKey', 'keys', 'count'];
+    propertyNames = ['key', 'exists', 'hasChanges', 'save', 'set', 'remove', 'containsKey', 'keys',
+        'count'];
     for (var i in propertyNames) {
         var name = propertyNames[i];
         ProxyCollection.prototype['$' + name] = generateProxyMethod(name);
