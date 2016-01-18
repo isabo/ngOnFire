@@ -56,27 +56,27 @@ var People = onfire.defineModel(
 
 
 
-describe('$Model service', function() {
+describe('$model service', function() {
 
     // Set the context for inject calls.
     beforeEach(angular.mock.module('test'));
 
-    it('exists and is injectable', inject(function($Model) {
-        expect(typeof $Model).toBe('function');
+    it('exists and is injectable', inject(function($model) {
+        expect(typeof $model).toBe('function');
     }));
 });
 
 
 
-describe('$Model service generates a model constructor whose prototype', function() {
+describe('$model service generates a model constructor whose prototype', function() {
 
     var $Person;
 
     // Set the context for inject calls.
     beforeEach(angular.mock.module('test'));
 
-    beforeEach(inject(function($Model) {
-        $Person = $Model(Person);
+    beforeEach(inject(function($model) {
+        $Person = $model(Person);
     }));
 
 
@@ -113,15 +113,15 @@ describe('$Model service generates a model constructor whose prototype', functio
 });
 
 
-describe('$Model service generates a collection constructor whose prototype', function() {
+describe('$model service generates a collection constructor whose prototype', function() {
 
     var $People;
 
     // Set the context for inject calls.
     beforeEach(angular.mock.module('test'));
 
-    beforeEach(inject(function($Model) {
-        $People = $Model(People);
+    beforeEach(inject(function($model) {
+        $People = $model(People);
     }));
 
 
@@ -174,9 +174,9 @@ describe('Model instance', function() {
     // Set the context for inject calls.
     beforeEach(angular.mock.module('test'));
 
-    beforeEach(inject(function(_$rootScope_, $Model) {
+    beforeEach(inject(function(_$rootScope_, $model) {
         $rootScope = _$rootScope_;
-        $Person = $Model(Person);
+        $Person = $model(Person);
     }));
 
     it('loads the data correctly', function(done) {
@@ -286,10 +286,10 @@ describe('Collection instance', function() {
     // Set the context for inject calls.
     beforeEach(angular.mock.module('test'));
 
-    beforeEach(inject(function(_$rootScope_, $Model) {
+    beforeEach(inject(function(_$rootScope_, $model) {
         $rootScope = _$rootScope_;
-        $People = $Model(People);
-        $Person = $Model(Person);
+        $People = $model(People);
+        $Person = $model(Person);
     }));
 
 

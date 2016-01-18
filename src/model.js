@@ -1,7 +1,7 @@
 (function(){
 
 angular.module('ngOnFire').
-    factory('$Model', createModelService);
+    factory('$model', createModelService);
 
 
 /**
