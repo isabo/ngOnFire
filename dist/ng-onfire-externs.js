@@ -71,7 +71,7 @@ ngOnFire.$Collection.prototype.$save = function() {};
 
 /**
  * @param {string} key
- * @return {Firebase.Value|ngOnFire.$Model|ngOnFire.Collection}
+ * @return {Firebase.Value|ngOnFire.$Model|ngOnFire.$Collection}
  */
 ngOnFire.$Collection.prototype.$get = function(key) {};
 
@@ -93,19 +93,23 @@ ngOnFire.$Collection.prototype.$keys = function() {};
 /**
  * @param {!Object=} opt_values
  * @return {!angular.$q.Promise<ngOnFire.$Collection,Error>}
- * @override
  */
 ngOnFire.$Collection.prototype.$create = function(opt_values) {};
 
 /**
  * @param {string} key
  * @return {!angular.$q.Promise<null,Error>}
- * @override
  */
 ngOnFire.$Collection.prototype.$remove = function(key) {};
 
 /**
- * @param {function(ngOnFire.$Model|ngOnFire.$Collection|Firebase.Value, string):(!angular.$q.Promise|undefined)} callback
+ * @param {ngOnFire.$Collection.ForEachCallBack} callback
  * @return {!angular.$q.Promise<null,Error>}
  */
 ngOnFire.$Collection.prototype.$forEach = function(callback) {};
+
+
+/**
+ * @typedef {function((ngOnFire.$Model|ngOnFire.$Collection|Firebase.Value), string):(!angular.$q.Promise|undefined)}
+ */
+ngOnFire.$Collection.ForEachCallBack;
