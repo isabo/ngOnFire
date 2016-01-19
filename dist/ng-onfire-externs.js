@@ -2,7 +2,7 @@ var ngOnFire = {};
 
 
 /**
- * @param {onfire.Ref}
+ * @param {onfire.Ref} ref
  * @constructor
  */
 ngOnFire.$Model = function(ref) {};
@@ -43,6 +43,7 @@ ngOnFire.$Model.prototype.$save = function() {};
 
 
 /**
+ * @param {onfire.Ref} ref
  * @constructor
  * @extends {ngOnFire.$Model}
  */
