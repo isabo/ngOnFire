@@ -203,7 +203,7 @@ function createModelService($rootScope, $q) {
         var thisModel = /** @type {!onfire.model.Collection} */(this['$$model_']);
 
         var self = this;
-        return thisModel.create(opt_values).
+        var p = thisModel.create(opt_values).
             then(function(/** !onfire.model.Model */model) {
                 // By this point, we should have already handled the child_added event.
                 // But only if opt_values was supplied.
@@ -219,6 +219,8 @@ function createModelService($rootScope, $q) {
                     // will not.
                 }
             });
+
+        return $q.when(p);
     }
 
 
