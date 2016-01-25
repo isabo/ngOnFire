@@ -92,7 +92,7 @@ ngOnFire.$Collection.prototype.$keys = function() {};
 
 /**
  * @param {!Object=} opt_values
- * @return {!angular.$q.Promise<ngOnFire.$Collection,Error>}
+ * @return {!angular.$q.Promise<(ngOnFire.$Model|ngOnFire.$Collection),Error>}
  */
 ngOnFire.$Collection.prototype.$create = function(opt_values) {};
 
