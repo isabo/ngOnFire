@@ -62,7 +62,7 @@ function createModelService($rootScope, $q) {
     // Proxy the public methods from the "real" model constructor's prototype.
     var propertyNames = ['whenLoaded', 'key', 'exists', 'hasChanges', 'set', 'save'];
     for (var i in propertyNames) {
-        var name = propertyNames[i]
+        var name = propertyNames[i];
         ProxyModel.prototype['$' + name] = generateProxyMethod(name);
     }
 
@@ -508,7 +508,7 @@ function createModelService($rootScope, $q) {
                     // 2. A constructor for a subordinate model. If so the name will end in Ctor_.
                     // 3. A method added to the prototype by the consumer.
 
-                    if (name in schema) {
+                    if (schema.hasOwnProperty(name)) {
                         // It's a getter/setter. We need to create a getter and a setter on the
                         // proxy class we're generating.
                         defineProxyProperty(proxyCtor, name);
